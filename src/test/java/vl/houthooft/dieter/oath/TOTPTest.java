@@ -38,12 +38,14 @@ public class TOTPTest {
                 "38618901",
                 "47863826"};
 
-        String key = "12345678901234567890";
+        String key = "3132333435363738393031323334353637383930";
+        String key32 = key + "313233343536373839303132";
+        String key64 = key + key + key + "31323334";
 
         for (int i = 0; i < testTimes.length; i++) {
             assert(TOTP.generateTOTP(key,testTimes[i],"8").equals(sha1Results[i]));
-            assert(TOTP.generateTOTP256(key,testTimes[i],"8").equals(sha256Results[i]));
-            assert(TOTP.generateTOTP512(key,testTimes[i],"8").equals(sha512Results[i]));
+            assert(TOTP.generateTOTP256(key32,testTimes[i],"8").equals(sha256Results[i]));
+            assert(TOTP.generateTOTP512(key64,testTimes[i],"8").equals(sha512Results[i]));
         }
     }
 }
