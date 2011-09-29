@@ -4,7 +4,7 @@
 
   <groupId>net.lin-k</groupId>
   <artifactId>oath</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <packaging>jar</packaging>
   <description>A copy of the OATH Java reference implementation from the RFC's</description>
 
