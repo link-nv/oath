@@ -1,4 +1,4 @@
-package vl.houthooft.dieter.oath;
+package net.link.oath;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;

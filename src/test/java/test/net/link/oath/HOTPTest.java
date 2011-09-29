@@ -1,5 +1,6 @@
-package vl.houthooft.dieter.oath;
+package test.net.link.oath;
 
+import net.link.oath.HOTP;
 import org.junit.Test;
 
 public class HOTPTest {

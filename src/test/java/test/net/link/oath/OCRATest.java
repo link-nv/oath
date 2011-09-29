@@ -1,5 +1,6 @@
-package vl.houthooft.dieter.oath;
+package test.net.link.oath;
 
+import net.link.oath.OCRA;
 import org.junit.Test;
 
 import java.math.BigInteger;

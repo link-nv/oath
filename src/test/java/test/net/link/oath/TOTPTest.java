@@ -1,5 +1,6 @@
-package vl.houthooft.dieter.oath;
+package test.net.link.oath;
 
+import net.link.oath.TOTP;
 import org.junit.Test;
 
 public class TOTPTest {
@@ -43,7 +44,7 @@ public class TOTPTest {
         String key64 = key + key + key + "31323334";
 
         for (int i = 0; i < testTimes.length; i++) {
-            assert(TOTP.generateTOTP(key,testTimes[i],"8").equals(sha1Results[i]));
+            assert(TOTP.generateTOTP(key, testTimes[i], "8").equals(sha1Results[i]));
             assert(TOTP.generateTOTP256(key32,testTimes[i],"8").equals(sha256Results[i]));
             assert(TOTP.generateTOTP512(key64,testTimes[i],"8").equals(sha512Results[i]));
         }

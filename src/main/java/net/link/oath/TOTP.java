@@ -1,4 +1,4 @@
-package vl.houthooft.dieter.oath;
+package net.link.oath;
 
 /**
  Copyright (c) 2011 IETF Trust and the persons identified as
