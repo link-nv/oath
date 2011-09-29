@@ -14,6 +14,13 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <distributionManagement>
+      <repository>
+          <id>maven.repository</id>
+          <url>file:${basedir}/maven-repository</url>
+      </repository>
+  </distributionManagement>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
