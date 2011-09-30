@@ -91,12 +91,6 @@ public class OCRA {
      * @param timeStamp          a value that reflects a time
      * @return A numeric String in base 10 that includes
      *         truncationDigits digits
-     *         <p/>
-     *         <p/>
-     *         <p/>
-     *         M'Raihi, et al.               Informational                    [Page 21]
-     *         <p/>
-     *         RFC 6287                          OCRA                         June 2011
      */
     static public String generateOCRA(String ocraSuite,
                                       String key,
