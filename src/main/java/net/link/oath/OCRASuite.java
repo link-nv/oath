@@ -7,13 +7,15 @@ public class OCRASuite {
     private CryptoFunction cryptoFunction;
     private DataMode dataMode;
 
-    public OCRASuite () {
+    public OCRASuite() {
         // empty
     }
 
-    public OCRASuite(String suiteString) throws InvalidOcraSuiteException, InvalidCryptoFunctionException, InvalidHashException {
-        StringTokenizer tokens = new StringTokenizer(suiteString,":");
-        if (tokens.countTokens() != 3) throw new InvalidOcraSuiteException("An OCRA suite should consist of 3 parts separated by ':'");
+    public OCRASuite(String suiteString) throws InvalidOcraSuiteException, InvalidCryptoFunctionException,
+            InvalidHashException, InvalidDataModeException {
+        StringTokenizer tokens = new StringTokenizer(suiteString, ":");
+        if (tokens.countTokens() != 3)
+            throw new InvalidOcraSuiteException("An OCRA suite should consist of 3 parts separated by ':'");
 
         String ocraVersion = tokens.nextToken();
         if (!ocraVersion.equals("OCRA-1")) throw new InvalidOcraSuiteException("The OCRA version should be OCRA-1");

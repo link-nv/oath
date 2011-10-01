@@ -26,54 +26,9 @@ public class OCRA {
     private OCRA() {
     }
 
-    /**
-     * This method uses the JCE to provide the crypto
-     * algorithm.
-     * HMAC computes a Hashed Message Authentication Code with the
-     * crypto hash algorithm as a parameter.
-     *
-     * @param crypto   the crypto algorithm (HmacSHA1, HmacSHA256,
-     *                 HmacSHA512)
-     * @param keyBytes the bytes to use for the HMAC key
-     * @param text     the message or text to be authenticated.
-     */
-
-    private static byte[] hmac_sha1(String crypto,
-                                    byte[] keyBytes, byte[] text) {
-        Mac hmac = null;
-        try {
-            hmac = Mac.getInstance(crypto);
-            SecretKeySpec macKey =
-                    new SecretKeySpec(keyBytes, "RAW");
-            hmac.init(macKey);
-            return hmac.doFinal(text);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-
     private static final int[] DIGITS_POWER
             // 0 1  2   3    4     5      6       7        8
             = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
-
-    /**
-     * This method converts HEX string to Byte[]
-     *
-     * @param hex the HEX string
-     * @return A byte array
-     */
-    private static byte[] hexStr2Bytes(String hex) {
-        // Adding one byte to get the right conversion
-        // values starting with "0" can be converted
-        byte[] bArray = new BigInteger("10" + hex, 16).toByteArray();
-
-        // Copy all the REAL bytes, not the "first"
-        byte[] ret = new byte[bArray.length - 1];
-        System.arraycopy(bArray, 1, ret, 0, ret.length);
-        return ret;
-    }
 
 
     /**
@@ -219,7 +174,7 @@ public class OCRA {
         // Put the bytes of "Counter" to the message
         // Input is HEX encoded
         if (counterLength > 0) {
-            bArray = hexStr2Bytes(counter);
+            bArray = Util.hexStr2Bytes(counter);
             System.arraycopy(bArray, 0, msg, ocraSuiteLength + 1,
                     bArray.length);
         }
@@ -228,7 +183,7 @@ public class OCRA {
         // Put the bytes of "question" to the message
         // Input is text encoded
         if (questionLength > 0) {
-            bArray = hexStr2Bytes(question);
+            bArray = Util.hexStr2Bytes(question);
             System.arraycopy(bArray, 0, msg, ocraSuiteLength + 1 +
                     counterLength, bArray.length);
         }
@@ -236,7 +191,7 @@ public class OCRA {
         // Put the bytes of "password" to the message
         // Input is HEX encoded
         if (passwordLength > 0) {
-            bArray = hexStr2Bytes(password);
+            bArray = Util.hexStr2Bytes(password);
             System.arraycopy(bArray, 0, msg, ocraSuiteLength + 1 +
                     counterLength + questionLength, bArray.length);
 
@@ -245,7 +200,7 @@ public class OCRA {
         // Put the bytes of "sessionInformation" to the message
         // Input is text encoded
         if (sessionInformationLength > 0) {
-            bArray = hexStr2Bytes(sessionInformation);
+            bArray = Util.hexStr2Bytes(sessionInformation);
             System.arraycopy(bArray, 0, msg, ocraSuiteLength + 1 +
                     counterLength + questionLength +
                     passwordLength, bArray.length);
@@ -254,16 +209,16 @@ public class OCRA {
         // Put the bytes of "time" to the message
         // Input is text value of minutes
         if (timeStampLength > 0) {
-            bArray = hexStr2Bytes(timeStamp);
+            bArray = Util.hexStr2Bytes(timeStamp);
             System.arraycopy(bArray, 0, msg, ocraSuiteLength + 1 +
                     counterLength + questionLength +
                     passwordLength + sessionInformationLength,
                     bArray.length);
         }
 
-        bArray = hexStr2Bytes(key);
+        bArray = Util.hexStr2Bytes(key);
 
-        byte[] hash = hmac_sha1(crypto, bArray, msg);
+        byte[] hash = Util.hmac_sha(crypto, bArray, msg);
 
         // put selected bytes into result int
         int offset = hash[hash.length - 1] & 0xf;

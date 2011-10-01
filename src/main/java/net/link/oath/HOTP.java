@@ -155,7 +155,7 @@ public class HOTP {
         }
 
         // compute hmac hash
-        byte[] hash = hmac_sha1(secret, text);
+        byte[] hash = Util.hmac_sha("HmacSHA1",secret, text);
 
         // put selected bytes into result int
         int offset = hash[hash.length - 1] & 0xf;
