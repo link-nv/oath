@@ -15,7 +15,7 @@ public class HOTPTest {
                 0x37, 0x38, 0x39, 0x30};
 
         try {
-            assert (HOTP.generateOTP(secret, 0, 6, false, -1).equals("755224"));;
+            assert (HOTP.generateOTP(secret, 0, 6, false, -1).equals("755224"));
             assert (HOTP.generateOTP(secret, 1, 6, false, -1).equals("287082"));
             assert (HOTP.generateOTP(secret, 2, 6, false, -1).equals("359152"));
             assert (HOTP.generateOTP(secret, 3, 6, false, -1).equals("969429"));

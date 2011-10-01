@@ -48,6 +48,6 @@ public class QMode {
     }
 
     public enum QType {
-        A, N, H;
+        A, N, H
     }
 }

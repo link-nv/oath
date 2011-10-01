@@ -11,12 +11,6 @@ package net.link.oath;
  (http://trustee.ietf.org/license-info).
  */
 
-import java.lang.reflect.UndeclaredThrowableException;
-import java.security.GeneralSecurityException;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.math.BigInteger;
-
 /**
  * This is an example implementation of the OATH
  * TOTP algorithm.
@@ -41,8 +35,7 @@ public class TOTP {
      * @param key:          the shared secret, HEX encoded
      * @param time:         a value that reflects a time
      * @param returnDigits: number of digits to return
-     * @return: a numeric String in base 10 that includes
-     * truncationDigits digits
+     * @return a numeric String in base 10 that includes truncationDigits digits
      */
 
     public static String generateTOTP(String key,
@@ -58,7 +51,7 @@ public class TOTP {
      * @param key:          the shared secret, HEX encoded
      * @param time:         a value that reflects a time
      * @param returnDigits: number of digits to return
-     * @return: a numeric String in base 10 that includes
+     * @return a numeric String in base 10 that includes
      * truncationDigits digits
      */
 
@@ -75,7 +68,7 @@ public class TOTP {
      * @param key:          the shared secret, HEX encoded
      * @param time:         a value that reflects a time
      * @param returnDigits: number of digits to return
-     * @return: a numeric String in base 10 that includes
+     * @return a numeric String in base 10 that includes
      * truncationDigits digits
      */
 
@@ -93,7 +86,7 @@ public class TOTP {
      * @param time:         a value that reflects a time
      * @param returnDigits: number of digits to return
      * @param crypto:       the crypto function to use
-     * @return: a numeric String in base 10 that includes
+     * @return a numeric String in base 10 that includes
      * truncationDigits digits
      */
 
@@ -101,8 +94,7 @@ public class TOTP {
                                       String time,
                                       String returnDigits,
                                       String crypto) {
-        int codeDigits = Integer.decode(returnDigits).intValue();
-        String result = null;
+        int codeDigits = Integer.decode(returnDigits);
 
         // Using the counter
         // First 8 bytes are for the movingFactor
@@ -126,7 +118,7 @@ public class TOTP {
 
         int otp = binary % DIGITS_POWER[codeDigits];
 
-        result = Integer.toString(otp);
+        String result = Integer.toString(otp);
         while (result.length() < codeDigits) {
             result = "0" + result;
         }

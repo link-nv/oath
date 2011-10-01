@@ -8,7 +8,7 @@ import java.security.GeneralSecurityException;
 
 public class Util {
 
-        /**
+    /**
      * This method uses the JCE to provide the crypto algorithm.
      * HMAC computes a Hashed Message Authentication Code with the
      * crypto hash algorithm as a parameter.
@@ -17,10 +17,12 @@ public class Util {
      *                  HmacSHA512)
      * @param keyBytes: the bytes to use for the HMAC key
      * @param text:     the message or text to be authenticated
+     *
+     * @return the Hmac as byte[]
      */
 
     public static byte[] hmac_sha(String crypto, byte[] keyBytes,
-                                   byte[] text) {
+                                  byte[] text) {
         try {
             Mac hmac;
             hmac = Mac.getInstance(crypto);

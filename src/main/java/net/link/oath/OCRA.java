@@ -11,10 +11,6 @@ package net.link.oath;
  (http://trustee.ietf.org/license-info).
  */
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.math.BigInteger;
-
 /**
  * This an example implementation of OCRA.
  * Visit www.openauthentication.org for more information.
@@ -55,9 +51,8 @@ public class OCRA {
                                       String sessionInformation,
                                       String timeStamp) {
 
-        int codeDigits = 0;
+        int codeDigits;
         String crypto = "";
-        String result = null;
         int ocraSuiteLength = (ocraSuite.getBytes()).length;
         int counterLength = 0;
         int questionLength = 0;
@@ -91,7 +86,7 @@ public class OCRA {
         }
         // Question - always 128 bytes
         if (DataInput.toLowerCase().startsWith("q") ||
-                (DataInput.toLowerCase().indexOf("-q") >= 0)) {
+                (DataInput.toLowerCase().contains("-q"))) {
             while (question.length() < 256)
                 question = question + "0";
             questionLength = 128;
@@ -231,7 +226,7 @@ public class OCRA {
 
         int otp = binary % DIGITS_POWER[codeDigits];
 
-        result = Integer.toString(otp);
+        String result = Integer.toString(otp);
         while (result.length() < codeDigits) {
             result = "0" + result;
         }

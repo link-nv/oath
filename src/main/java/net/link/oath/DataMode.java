@@ -51,7 +51,6 @@ public class DataMode {
         }
         try {
             tMode = new TMode(candidate);
-            candidate = tokens.nextToken();
         }
         catch (Exception e) {
             // swallow

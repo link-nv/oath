@@ -18,4 +18,14 @@ public class SMode {
             throw new InvalidDataModeException("S spec should contain a valid 3 digit length spec");
         }
     }
+
+    public int getLength() {
+        return length;
+    }
+
+    public void setLength(int length) throws InvalidDataModeException {
+        if (length < 0 || length > 999 )
+            throw new InvalidDataModeException("S mode size too large, should be between 0 and 999");
+        this.length = length;
+    }
 }

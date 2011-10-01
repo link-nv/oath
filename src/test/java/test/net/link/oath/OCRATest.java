@@ -5,7 +5,6 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 
-//TODO: implement OCR unit test based on test code in RFC
 public class OCRATest {
 
     private String key20 = "3132333435363738393031323334353637383930";
@@ -15,12 +14,12 @@ public class OCRATest {
     private String pass = "7110eda4d09e062aa5e4a390b0a572ac0d2c0220";
 
     private static String toKey(String key) {
-        return new String((new BigInteger(key, 10))
-                .toString(16)).toUpperCase();
+        return (new BigInteger(key, 10))
+                .toString(16).toUpperCase();
     }
 
     private static String asHex(byte buf[]) {
-        StringBuffer strbuf = new StringBuffer(buf.length * 2);
+        StringBuilder strbuf = new StringBuilder(buf.length * 2);
         int i;
 
         for (i = 0; i < buf.length; i++) {
@@ -31,7 +30,6 @@ public class OCRATest {
         return strbuf.toString();
     }
 
-    //TODO: not complete yet
     @Test
     public void testOneWay() {
         String ocraSuite = "OCRA-1:HOTP-SHA1-6:QN08";

@@ -12,18 +12,18 @@ public class CryptoFunction {
     }
 
     public CryptoFunction(String cryptoString) throws InvalidCryptoFunctionException, InvalidHashException {
-        StringTokenizer tokens = new StringTokenizer(cryptoString,"-");
-        if (tokens.countTokens() != 3) throw new InvalidCryptoFunctionException("A cryptofunction should have 3 parts separated by '-'");
+        StringTokenizer tokens = new StringTokenizer(cryptoString, "-");
+        if (tokens.countTokens() != 3)
+            throw new InvalidCryptoFunctionException("A cryptofunction should have 3 parts separated by '-'");
 
         String hotp = tokens.nextToken();
         if (!hotp.equals("HOTP")) throw new InvalidCryptoFunctionException("The algorithm should always be 'HOTP'");
 
-        Hash hash = Hash.toHash(tokens.nextToken());
+        this.hash = Hash.toHash(tokens.nextToken());
 
         try {
-        truncation = Integer.parseInt(tokens.nextToken());
-        }
-        catch (NumberFormatException e) {
+            truncation = Integer.parseInt(tokens.nextToken());
+        } catch (NumberFormatException e) {
             throw new InvalidCryptoFunctionException("The crypto function truncation should be a valid number");
         }
         if (truncation != 0 && truncation < 4 && truncation > 10)
