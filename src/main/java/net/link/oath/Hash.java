@@ -1,7 +1,17 @@
 package net.link.oath;
 
 public enum Hash {
-    SHA1, SHA256, SHA512;
+    SHA1("SHA1"), SHA256("SHA256"), SHA512("SHA512");
+
+    private String stringRep;
+
+    Hash(String stringRep) {
+        this.stringRep = stringRep;
+    }
+
+    public String toString() {
+        return stringRep;
+    }
 
     public static Hash toHash(String hashString) throws InvalidHashException {
         if (hashString.equals("SHA1")) return SHA1;

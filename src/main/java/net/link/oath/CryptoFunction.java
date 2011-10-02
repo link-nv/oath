@@ -47,4 +47,8 @@ public class CryptoFunction {
             throw new InvalidCryptoFunctionException("The truncation should be 0 or between 4 and 10");
         this.truncation = truncation;
     }
+
+    public String toString() {
+        return "HOTP-" + hash.toString() + "-" + truncation;
+    }
 }

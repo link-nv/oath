@@ -1,5 +1,6 @@
 package net.link.oath;
 
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
 public class DataMode {
@@ -21,7 +22,7 @@ public class DataMode {
 
     public DataMode(String dataModeString) throws InvalidDataModeException {
         StringTokenizer tokens = new StringTokenizer(dataModeString, "-");
-        if (0 > tokens.countTokens() && tokens.countTokens() > 5)
+        if (1 > tokens.countTokens() && tokens.countTokens() > 5)
             throw new InvalidDataModeException("The data mode should be between 1 and 5 elements separated by '-'");
 
         String candidate = tokens.nextToken();
@@ -34,11 +35,12 @@ public class DataMode {
 
         qMode = new QMode(candidate);
 
-        candidate = tokens.nextToken();
         try {
+            candidate = tokens.nextToken();
             pMode = new PMode(candidate);
             candidate = tokens.nextToken();
         }
+        catch(NoSuchElementException e) { return; }
         catch (Exception e) {
             // swallow
         }
@@ -46,12 +48,14 @@ public class DataMode {
             sMode = new SMode(candidate);
             candidate = tokens.nextToken();
         }
+        catch(NoSuchElementException e) { return; }
         catch (Exception e) {
             // swallow
         }
         try {
             tMode = new TMode(candidate);
         }
+        catch(NoSuchElementException e) { return; }
         catch (Exception e) {
             // swallow
         }
@@ -96,5 +100,26 @@ public class DataMode {
 
     public void settMode(TMode tMode) {
         this.tMode = tMode;
+    }
+
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        if (true == counterMode) {
+            result.append("C-");
+        }
+        result.append(qMode.toString());
+        if (null != pMode) {
+            result.append("-");
+            result.append(pMode.toString());
+        }
+        if (null != sMode) {
+            result.append("-");
+            result.append(sMode.toString());
+        }
+        if (null != tMode) {
+            result.append("-");
+            result.append(tMode.toString());
+        }
+        return result.toString();
     }
 }

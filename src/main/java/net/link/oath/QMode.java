@@ -11,7 +11,7 @@ public class QMode {
     }
 
     public QMode(String qModeString) throws InvalidDataModeException {
-        if (qModeString.startsWith("Q")) throw new InvalidDataModeException("Q mode spec should start with 'Q'");
+        if (!qModeString.startsWith("Q")) throw new InvalidDataModeException("Q mode spec should start with 'Q'");
         if (qModeString.length() != 4) throw new InvalidDataModeException("Q mode spec should be 4 characters");
         if (qModeString.charAt(1) == 'A') {
             qType = QType.A;
@@ -47,7 +47,21 @@ public class QMode {
         this.length = length;
     }
 
+    public String toString() {
+        return String.format("Q%C%2d", qType.toString(),length);
+    }
+
     public enum QType {
-        A, N, H
+        A("A"), N("N"), H("H");
+
+        private String stringRep;
+
+        QType(String stringRep) {
+            this.stringRep = stringRep;
+        }
+
+        public String toString() {
+            return stringRep;
+        }
     }
 }

@@ -20,4 +20,8 @@ public class PMode {
     public void setHash(Hash hash) {
         this.hash = hash;
     }
+
+    public String toString() {
+        return "P" + hash.toString();
+    }
 }

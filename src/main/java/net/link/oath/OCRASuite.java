@@ -41,4 +41,8 @@ public class OCRASuite {
     public void setDataMode(DataMode dataMode) {
         this.dataMode = dataMode;
     }
+
+    public String toString() {
+        return "OCRA-1:" + cryptoFunction.toString() + ":" + dataMode.toString();
+    }
 }

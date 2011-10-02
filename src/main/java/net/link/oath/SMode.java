@@ -28,4 +28,8 @@ public class SMode {
             throw new InvalidDataModeException("S mode size too large, should be between 0 and 999");
         this.length = length;
     }
+
+    public String toString() {
+        return String.format("S%3d",length);
+    }
 }

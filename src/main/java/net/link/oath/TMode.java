@@ -36,7 +36,17 @@ public class TMode {
     }
 
     public enum TType {
-        S, M, H
+        S("S"), M("M"), H("H");
+
+        private String stringRep;
+
+        TType(String stringRep) {
+            this.stringRep = stringRep;
+        }
+
+        public String toString() {
+            return stringRep;
+        }
     }
 
     public int getSize() {
@@ -62,10 +72,13 @@ public class TMode {
         this.tType = tType;
         try {
             this.setSize(this.size);
-        }
-        catch (InvalidDataModeException e) {
+        } catch (InvalidDataModeException e) {
             this.tType = asItWas;
             throw e;
         }
+    }
+
+    public String toString() {
+        return "T" + size + tType.toString();
     }
 }

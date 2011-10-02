@@ -1,6 +1,7 @@
 package test.net.link.oath;
 
 import net.link.oath.OCRA;
+import net.link.oath.OCRASuite;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -31,8 +32,8 @@ public class OCRATest {
     }
 
     @Test
-    public void testOneWay() {
-        String ocraSuite = "OCRA-1:HOTP-SHA1-6:QN08";
+    public void testOneWay() throws Exception {
+        OCRASuite ocraSuite = new OCRASuite("OCRA-1:HOTP-SHA1-6:QN08");
 
         assert (OCRA.generateOCRA(ocraSuite, key20, "", toKey("00000000"), "", "", "").equals("237653"));
         assert (OCRA.generateOCRA(ocraSuite, key20, "", toKey("11111111"), "", "", "").equals("243178"));
@@ -45,7 +46,7 @@ public class OCRATest {
         assert (OCRA.generateOCRA(ocraSuite, key20, "", toKey("88888888"), "", "", "").equals("750600"));
         assert (OCRA.generateOCRA(ocraSuite, key20, "", toKey("99999999"), "", "", "").equals("294470"));
 
-        ocraSuite = "OCRA-1:HOTP-SHA256-8:C-QN08-PSHA1";
+        ocraSuite = new OCRASuite("OCRA-1:HOTP-SHA256-8:C-QN08-PSHA1");
 
         assert (OCRA.generateOCRA(ocraSuite, key32, "0", toKey("12345678"), pass, "", "").equals("65347737"));
         assert (OCRA.generateOCRA(ocraSuite, key32, "1", toKey("12345678"), pass, "", "").equals("86775851"));
@@ -58,7 +59,7 @@ public class OCRATest {
         assert (OCRA.generateOCRA(ocraSuite, key32, "8", toKey("12345678"), pass, "", "").equals("75011558"));
         assert (OCRA.generateOCRA(ocraSuite, key32, "9", toKey("12345678"), pass, "", "").equals("08522129"));
 
-        ocraSuite = "OCRA-1:HOTP-SHA256-8:QN08-PSHA1";
+        ocraSuite = new OCRASuite("OCRA-1:HOTP-SHA256-8:QN08-PSHA1");
 
         assert (OCRA.generateOCRA(ocraSuite, key32, "", toKey("00000000"), pass, "", "").equals("83238735"));
         assert (OCRA.generateOCRA(ocraSuite, key32, "", toKey("11111111"), pass, "", "").equals("01501458"));
@@ -66,7 +67,7 @@ public class OCRATest {
         assert (OCRA.generateOCRA(ocraSuite, key32, "", toKey("33333333"), pass, "", "").equals("86776967"));
         assert (OCRA.generateOCRA(ocraSuite, key32, "", toKey("44444444"), pass, "", "").equals("86807031"));
 
-        ocraSuite = "OCRA-1:HOTP-SHA512-8:C-QN08";
+        ocraSuite = new OCRASuite("OCRA-1:HOTP-SHA512-8:C-QN08");
 
         assert (OCRA.generateOCRA(ocraSuite, key64, "00000", toKey("00000000"), "", "", "").equals("07016083"));
         assert (OCRA.generateOCRA(ocraSuite, key64, "00001", toKey("11111111"), "", "", "").equals("63947962"));
@@ -79,7 +80,7 @@ public class OCRATest {
         assert (OCRA.generateOCRA(ocraSuite, key64, "00008", toKey("88888888"), "", "", "").equals("20403879"));
         assert (OCRA.generateOCRA(ocraSuite, key64, "00009", toKey("99999999"), "", "", "").equals("31409299"));
 
-        ocraSuite = "OCRA-1:HOTP-SHA512-8:QN08-T1M";
+        ocraSuite = new OCRASuite("OCRA-1:HOTP-SHA512-8:QN08-T1M");
 
         assert (OCRA.generateOCRA(ocraSuite, key64, "", toKey("00000000"), "", "", "132d0b6").equals("95209754"));
         assert (OCRA.generateOCRA(ocraSuite, key64, "", toKey("11111111"), "", "", "132d0b6").equals("55907591"));
@@ -89,8 +90,8 @@ public class OCRATest {
     }
 
     @Test
-    public void testMutual() {
-        String ocraSuite = "OCRA-1:HOTP-SHA256-8:QA08";
+    public void testMutual() throws Exception {
+        OCRASuite ocraSuite = new OCRASuite("OCRA-1:HOTP-SHA256-8:QA08");
 
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("CLI22220SRV11110".getBytes()), "", "", "").equals("28247970"));
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("CLI22221SRV11111".getBytes()), "", "", "").equals("01984843"));
@@ -98,7 +99,7 @@ public class OCRATest {
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("CLI22223SRV11113".getBytes()), "", "", "").equals("03351211"));
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("CLI22224SRV11114".getBytes()), "", "", "").equals("83412541"));
 
-        ocraSuite = "OCRA-1:HOTP-SHA256-8:QA08";
+        ocraSuite = new OCRASuite("OCRA-1:HOTP-SHA256-8:QA08");
 
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("SRV11110CLI22220".getBytes()), "", "", "").equals("15510767"));
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("SRV11111CLI22221".getBytes()), "", "", "").equals("90175646"));
@@ -106,7 +107,7 @@ public class OCRATest {
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("SRV11113CLI22223".getBytes()), "", "", "").equals("95285278"));
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("SRV11114CLI22224".getBytes()), "", "", "").equals("28934924"));
 
-        ocraSuite = "OCRA-1:HOTP-SHA512-8:QA08";
+        ocraSuite = new OCRASuite("OCRA-1:HOTP-SHA512-8:QA08");
 
         assert (OCRA.generateOCRA(ocraSuite, key64, "", asHex("CLI22220SRV11110".getBytes()), "", "", "").equals("79496648"));
         assert (OCRA.generateOCRA(ocraSuite, key64, "", asHex("CLI22221SRV11111".getBytes()), "", "", "").equals("76831980"));
@@ -114,7 +115,7 @@ public class OCRATest {
         assert (OCRA.generateOCRA(ocraSuite, key64, "", asHex("CLI22223SRV11113".getBytes()), "", "", "").equals("90856481"));
         assert (OCRA.generateOCRA(ocraSuite, key64, "", asHex("CLI22224SRV11114".getBytes()), "", "", "").equals("12761449"));
 
-        ocraSuite = "OCRA-1:HOTP-SHA512-8:QA08-PSHA1";
+        ocraSuite = new OCRASuite("OCRA-1:HOTP-SHA512-8:QA08-PSHA1");
 
         assert (OCRA.generateOCRA(ocraSuite, key64, "", asHex("SRV11110CLI22220".getBytes()), pass, "", "").equals("18806276"));
         assert (OCRA.generateOCRA(ocraSuite, key64, "", asHex("SRV11111CLI22221".getBytes()), pass, "", "").equals("70020315"));
@@ -124,8 +125,8 @@ public class OCRATest {
     }
 
     @Test
-    public void testSignature() {
-        String ocraSuite = "OCRA-1:HOTP-SHA256-8:QA08";
+    public void testSignature() throws Exception {
+        OCRASuite ocraSuite = new OCRASuite("OCRA-1:HOTP-SHA256-8:QA08");
 
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("SIG10000".getBytes()), "", "", "").equals("53095496"));
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("SIG11000".getBytes()), "", "", "").equals("04110475"));
@@ -133,7 +134,7 @@ public class OCRATest {
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("SIG13000".getBytes()), "", "", "").equals("76028668"));
         assert (OCRA.generateOCRA(ocraSuite, key32, "", asHex("SIG14000".getBytes()), "", "", "").equals("46554205"));
 
-        ocraSuite = "OCRA-1:HOTP-SHA512-8:QA10-T1M";
+        ocraSuite = new OCRASuite("OCRA-1:HOTP-SHA512-8:QA10-T1M");
 
         assert (OCRA.generateOCRA(ocraSuite, key64, "", asHex("SIG1000000".getBytes()), "", "", "132d0b6").equals("77537423"));
         assert (OCRA.generateOCRA(ocraSuite, key64, "", asHex("SIG1100000".getBytes()), "", "", "132d0b6").equals("31970405"));
