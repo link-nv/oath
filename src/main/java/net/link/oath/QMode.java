@@ -48,7 +48,7 @@ public class QMode {
     }
 
     public String toString() {
-        return String.format("Q%C%2d", qType.toString(),length);
+        return String.format("Q%S%02d", qType.toString(),length);
     }
 
     public enum QType {

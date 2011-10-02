@@ -16,18 +16,18 @@ public class TMode {
         if (stringLength < 3 || stringLength > 4)
             throw new InvalidDataModeException("T mode spec should be between 3 and 4 characters");
 
-        if (tModeString.charAt(stringLength) == 'S') {
+        if (tModeString.charAt(stringLength - 1) == 'S') {
             tType = TType.S;
-        } else if (tModeString.charAt(stringLength) == 'M') {
+        } else if (tModeString.charAt(stringLength - 1) == 'M') {
             tType = TType.M;
-        } else if (tModeString.charAt(stringLength) == 'H') {
+        } else if (tModeString.charAt(stringLength - 1) == 'H') {
             tType = TType.H;
         } else {
             throw new InvalidDataModeException("Invalid T type, should be S, M or H");
         }
 
         try {
-            size = Integer.parseInt(tModeString.substring(1, stringLength - 2));
+            size = Integer.parseInt(tModeString.substring(1, stringLength - 1));
         } catch (NumberFormatException e) {
             throw new InvalidDataModeException("Invalid amount for T mode spec");
         }

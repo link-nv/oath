@@ -52,9 +52,7 @@ public class OCRA {
                                       String timeStamp) {
 
         int codeDigits;
-        String crypto = "";
         int counterLength = 0;
-        int questionLength = 0;
         int passwordLength = 0;
         int sessionInformationLength = 0;
         int timeStampLength = 0;
@@ -73,7 +71,7 @@ public class OCRA {
 
         while (question.length() < 256)
             question = question + "0";
-        questionLength = 128;
+        int questionLength = 128;
 
         // Password - sha1
         PMode pMode = ocraSuite.getDataMode().getpMode();
@@ -82,17 +80,11 @@ public class OCRA {
                 while (password.length() < 40)
                     password = "0" + password;
                 passwordLength = 20;
-            }
-
-            // Password - sha256
-            if (pMode.getHash() == Hash.SHA256) {
+            } else if (pMode.getHash() == Hash.SHA256) {
                 while (password.length() < 64)
                     password = "0" + password;
                 passwordLength = 32;
-            }
-
-            // Password - sha512
-            if (pMode.getHash() == Hash.SHA512) {
+            } else if (pMode.getHash() == Hash.SHA512) {
                 while (password.length() < 128)
                     password = "0" + password;
                 passwordLength = 64;
@@ -134,11 +126,9 @@ public class OCRA {
 
         // Put the bytes of "Counter" to the message
         // Input is HEX encoded
-        if (counterLength > 0)
-
-        {
+        if (counterLength > 0) {
             bArray = Util.hexStr2Bytes(counter);
-            System.arraycopy(bArray, 0, msg, ocraSuiteLength,
+            System.arraycopy(bArray, 0, msg, ocraSuiteLength + 1,
                     bArray.length);
         }
 
@@ -188,7 +178,7 @@ public class OCRA {
 
         bArray = Util.hexStr2Bytes(key);
 
-        byte[] hash = Util.hmac_sha(crypto, bArray, msg);
+        byte[] hash = Util.hmac_sha("Hmac" + ocraSuite.getCryptoFunction().getHash().toString(), bArray, msg);
 
         // put selected bytes into result int
         int offset = hash[hash.length - 1] & 0xf;

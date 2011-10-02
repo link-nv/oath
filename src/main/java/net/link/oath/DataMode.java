@@ -34,29 +34,31 @@ public class DataMode {
         }
 
         qMode = new QMode(candidate);
-
         try {
             candidate = tokens.nextToken();
+        } catch (NoSuchElementException e) {
+            return;
+        }
+
+        try {
             pMode = new PMode(candidate);
             candidate = tokens.nextToken();
-        }
-        catch(NoSuchElementException e) { return; }
-        catch (Exception e) {
+        } catch (NoSuchElementException e) {
+            return;
+        } catch (Exception e) {
             // swallow
         }
         try {
             sMode = new SMode(candidate);
             candidate = tokens.nextToken();
-        }
-        catch(NoSuchElementException e) { return; }
-        catch (Exception e) {
+        } catch (NoSuchElementException e) {
+            return;
+        } catch (Exception e) {
             // swallow
         }
         try {
             tMode = new TMode(candidate);
-        }
-        catch(NoSuchElementException e) { return; }
-        catch (Exception e) {
+        } catch (Exception e) {
             // swallow
         }
         if (tokens.hasMoreTokens()) throw new InvalidDataModeException("There is an illegal token in the data mode");
