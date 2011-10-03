@@ -15,16 +15,17 @@ public class HOTPTest {
                 0x37, 0x38, 0x39, 0x30};
 
         try {
-            assert (HOTP.generateOTP(secret, 0, 6, false, -1).equals("755224"));
-            assert (HOTP.generateOTP(secret, 1, 6, false, -1).equals("287082"));
-            assert (HOTP.generateOTP(secret, 2, 6, false, -1).equals("359152"));
-            assert (HOTP.generateOTP(secret, 3, 6, false, -1).equals("969429"));
-            assert (HOTP.generateOTP(secret, 4, 6, false, -1).equals("338314"));
-            assert (HOTP.generateOTP(secret, 5, 6, false, -1).equals("254676"));
-            assert (HOTP.generateOTP(secret, 6, 6, false, -1).equals("287922"));
-            assert (HOTP.generateOTP(secret, 7, 6, false, -1).equals("162583"));
-            assert (HOTP.generateOTP(secret, 8, 6, false, -1).equals("399871"));
-            assert (HOTP.generateOTP(secret, 9, 6, false, -1).equals("520489"));
+            HOTP hotp = new HOTP(secret,6,false,-1,0);
+            assert (hotp.validate(0,"755224") == 1);
+            assert (hotp.validate(1,"287082") == 2);
+            assert (hotp.generateOTP(2).equals("359152"));
+            assert (hotp.generateOTP(3).equals("969429"));
+            assert (hotp.generateOTP(4).equals("338314"));
+            assert (hotp.generateOTP(5).equals("254676"));
+            assert (hotp.generateOTP(6).equals("287922"));
+            assert (hotp.generateOTP(7).equals("162583"));
+            assert (hotp.generateOTP(8).equals("399871"));
+            assert (hotp.generateOTP(9).equals("520489"));
         } catch (Exception e) {
             assert (false);
         }

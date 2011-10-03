@@ -1,46 +1,106 @@
 package net.link.oath;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-
-/*
- * OneTimePasswordAlgorithm.java
- * OATH Initiative,
- * HOTP one-time password algorithm
- *
+/**
+ * This class represents an HOTP configuration. It can be used to generate OTP's or to validate them
+ * whithin a defined lookahead.
  */
-
-/* Copyright (C) 2004, OATH.  All rights reserved.
- *
- * License to copy and use this software is granted provided that it
- * is identified as the "OATH HOTP Algorithm" in all material
- * mentioning or referencing this software or this function.
- *
- * License is also granted to make and use derivative works provided
- * that such works are identified as
- *  "derived from OATH HOTP algorithm"
- * in all material mentioning or referencing the derived work.
- *
- * OATH (Open AuTHentication) and its members make no
- * representations concerning either the merchantability of this
- * software or the suitability of this software for any particular
- * purpose.
- *
- * It is provided "as is" without express or implied warranty
- * of any kind and OATH AND ITS MEMBERS EXPRESSaLY DISCLAIMS
- * ANY WARRANTY OR LIABILITY OF ANY KIND relating to this software.
- *
- * These notices must be retained in any copies of any part of this
- * documentation and/or software.
- */
-
 public class HOTP {
 
-    private HOTP() {
+    private byte[] secret;
+    private int codeDigits;
+    private boolean addChecksum;
+    private int truncationOffset;
+    private int lookahead;
+
+    /**
+     * Instantiates an HOTP.
+     *
+     * @param secret           the shared secret
+     * @param codeDigits       the number of digits in the OTP, not
+     *                         including the checksum, if any.
+     * @param addChecksum      a flag that indicates if a checksum digit
+     *                         should be appended to the OTP.
+     * @param truncationOffset the offset into the MAC result to
+     *                         begin truncation.  If this value is out of
+     *                         the range of 0 ... 15, then dynamic
+     *                         truncation  will be used.
+     *                         Dynamic truncation is when the last 4
+     *                         bits of the last byte of the MAC are
+     *                         used to determine the start offset.
+     * @param lookahead        how many additional OTP's can be generated before validation fails.
+     *                         This parameter tries to deal with out of sync counters
+     */
+    public HOTP(byte[] secret,
+                int codeDigits,
+                boolean addChecksum,
+                int truncationOffset,
+                int lookahead) {
+        this.secret = secret;
+        this.codeDigits = codeDigits;
+        this.addChecksum = addChecksum;
+        this.truncationOffset = truncationOffset;
+        this.lookahead = lookahead;
     }
+
+    /**
+     * This method generates an OTP value for the given counter
+     *
+     * @param counter the counter, time, or other value that
+     *                changes on a per use basis.
+     * @return A numeric String in base 10 that includes
+     *         codeDigits digits plus the optional checksum
+     *         digit if requested.
+     */
+    public String generateOTP(int counter) {
+        // put movingFactor value into text byte array
+        int digits = this.addChecksum ? (this.codeDigits + 1) : this.codeDigits;
+        byte[] text = new byte[8];
+        for (int i = text.length - 1; i >= 0; i--) {
+            text[i] = (byte) (counter & 0xff);
+            counter >>= 8;
+        }
+
+        // compute hmac hash
+        byte[] hash = Util.hmac_sha("HmacSHA1", this.secret, text);
+
+        // put selected bytes into result int
+        int offset = hash[hash.length - 1] & 0xf;
+        if ((0 <= this.truncationOffset) &&
+                (this.truncationOffset < (hash.length - 4))) {
+            offset = truncationOffset;
+        }
+        int binary =
+                ((hash[offset] & 0x7f) << 24)
+                        | ((hash[offset + 1] & 0xff) << 16)
+                        | ((hash[offset + 2] & 0xff) << 8)
+                        | (hash[offset + 3] & 0xff);
+
+        int otp = binary % DIGITS_POWER[codeDigits];
+        if (addChecksum) {
+            otp = (otp * 10) + calcChecksum(otp, codeDigits);
+        }
+        String result = Integer.toString(otp);
+        while (result.length() < digits) {
+            result = "0" + result;
+        }
+        return result;
+    }
+
+    /**
+     * @param counter the counter value that was saved by the service provider
+     * @param otp     the otp that was provided by the subject
+     * @return the new counter value to be stored by the service provider
+     * @throws InvalidResponseException
+     */
+    public int validate(int counter, String otp) throws InvalidResponseException {
+        int newCounter = counter;
+        int i = 0;
+        while (i++ <= lookahead) {
+            if (generateOTP(counter).equals(otp)) return counter + i;
+        }
+        throw new InvalidResponseException("Provided HOTP response is outside the lookahead range");
+    }
+
 
     // These are used to calculate the check-sum digits.
     //                                0  1  2  3  4  5  6  7  8  9
@@ -57,7 +117,7 @@ public class HOTP {
      * @param digits number of significant places in the number
      * @return the checksum of num
      */
-    public static int calcChecksum(long num, int digits) {
+    private static int calcChecksum(long num, int digits) {
         boolean doubleDigit = true;
         int total = 0;
         while (0 < digits--) {
@@ -80,70 +140,4 @@ public class HOTP {
             // 0 1  2   3    4     5      6       7        8
             = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
 
-    /**
-     * This method generates an OTP value for the given
-     * set of parameters.
-     *
-     * @param secret           the shared secret
-     * @param movingFactor     the counter, time, or other value that
-     *                         changes on a per use basis.
-     * @param codeDigits       the number of digits in the OTP, not
-     *                         including the checksum, if any.
-     * @param addChecksum      a flag that indicates if a checksum digit
-     *                         should be appended to the OTP.
-     * @param truncationOffset the offset into the MAC result to
-     *                         begin truncation.  If this value is out of
-     *                         the range of 0 ... 15, then dynamic
-     *                         truncation  will be used.
-     *                         Dynamic truncation is when the last 4
-     *                         bits of the last byte of the MAC are
-     *                         used to determine the start offset.
-     * @return A numeric String in base 10 that includes
-     *         codeDigits digits plus the optional checksum
-     *         digit if requested.
-     * @throws NoSuchAlgorithmException if no provider makes
-     *                                  either HmacSHA1 or HMAC-SHA-1
-     *                                  digest algorithms available.
-     * @throws InvalidKeyException      The secret provided was not
-     *                                  a valid HMAC-SHA-1 key.
-     */
-    static public String generateOTP(byte[] secret,
-                                     long movingFactor,
-                                     int codeDigits,
-                                     boolean addChecksum,
-                                     int truncationOffset)
-            throws NoSuchAlgorithmException, InvalidKeyException {
-        // put movingFactor value into text byte array
-        int digits = addChecksum ? (codeDigits + 1) : codeDigits;
-        byte[] text = new byte[8];
-        for (int i = text.length - 1; i >= 0; i--) {
-            text[i] = (byte) (movingFactor & 0xff);
-            movingFactor >>= 8;
-        }
-
-        // compute hmac hash
-        byte[] hash = Util.hmac_sha("HmacSHA1",secret, text);
-
-        // put selected bytes into result int
-        int offset = hash[hash.length - 1] & 0xf;
-        if ((0 <= truncationOffset) &&
-                (truncationOffset < (hash.length - 4))) {
-            offset = truncationOffset;
-        }
-        int binary =
-                ((hash[offset] & 0x7f) << 24)
-                        | ((hash[offset + 1] & 0xff) << 16)
-                        | ((hash[offset + 2] & 0xff) << 8)
-                        | (hash[offset + 3] & 0xff);
-
-        int otp = binary % DIGITS_POWER[codeDigits];
-        if (addChecksum) {
-            otp = (otp * 10) + calcChecksum(otp, codeDigits);
-        }
-        String result = Integer.toString(otp);
-        while (result.length() < digits) {
-            result = "0" + result;
-        }
-        return result;
-    }
 }
