@@ -47,9 +47,9 @@ public class TOTPTest {
         TOTP totp256 = new TOTP(key32.getBytes(),8,30,0,0);
         TOTP totp512 = new TOTP(key64.getBytes(),8,30,0,0);
         for (int i = 0; i < testTimes.length; i++) {
-            assert(totp.generateTOTP(testTimes[i]).equals(sha1Results[i]));
-            assert(totp256.generateTOTP(testTimes[i]).equals(sha256Results[i]));
-            assert(totp512.generateTOTP(testTimes[i]).equals(sha512Results[i]));
+            assert(totp.validate(testTimes[i],sha1Results[i]) == 0);
+            assert(totp256.validate(testTimes[i],sha256Results[i]) == 0);
+            assert(totp512.validate(testTimes[i],sha512Results[i]) == 0);
         }
     }
 }
