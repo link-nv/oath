@@ -6,14 +6,14 @@ import org.junit.Test;
 public class TOTPTest {
 
     @Test
-    public void appendixBTest() {
-        String[] testTimes = {
-                "0000000000000001",
-                "00000000023523EC",
-                "00000000023523ED",
-                "000000000273EF07",
-                "0000000003F940AA",
-                "0000000027BC86AA"};
+    public void appendixBTest() throws Exception {
+        long[] testTimes = {
+                59000L,
+                1111111109000L,
+                1111111111000L,
+                1234567890000L,
+                2000000000000L,
+                20000000000000L};
 
         String[] sha1Results = {
                 "94287082",
@@ -39,14 +39,17 @@ public class TOTPTest {
                 "38618901",
                 "47863826"};
 
-        String key = "3132333435363738393031323334353637383930";
-        String key32 = key + "313233343536373839303132";
-        String key64 = key + key + key + "31323334";
+        String key20 = "12345678901234567890";
+        String key32 = key20 + "123456789012";
+        String key64 = key20 + key20 + key20 + "1234";
 
+        TOTP totp = new TOTP(key20.getBytes(),8,30,0,0);
+        TOTP totp256 = new TOTP(key32.getBytes(),8,30,0,0);
+        TOTP totp512 = new TOTP(key64.getBytes(),8,30,0,0);
         for (int i = 0; i < testTimes.length; i++) {
-            assert(TOTP.generateTOTP(key, testTimes[i], "8").equals(sha1Results[i]));
-            assert(TOTP.generateTOTP256(key32,testTimes[i],"8").equals(sha256Results[i]));
-            assert(TOTP.generateTOTP512(key64,testTimes[i],"8").equals(sha512Results[i]));
+            assert(totp.generateTOTP(testTimes[i]).equals(sha1Results[i]));
+            assert(totp256.generateTOTP(testTimes[i]).equals(sha256Results[i]));
+            assert(totp512.generateTOTP(testTimes[i]).equals(sha512Results[i]));
         }
     }
 }

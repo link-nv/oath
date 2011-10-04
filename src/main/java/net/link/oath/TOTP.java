@@ -1,27 +1,34 @@
 package net.link.oath;
 
-/**
- Copyright (c) 2011 IETF Trust and the persons identified as
- authors of the code. All rights reserved.
-
- Redistribution and use in source and binary forms, with or without
- modification, is permitted pursuant to, and subject to the license
- terms contained in, the Simplified BSD License set forth in Section
- 4.c of the IETF Trust's Legal Provisions Relating to IETF Documents
- (http://trustee.ietf.org/license-info).
- */
-
-/**
- * This is an example implementation of the OATH
- * TOTP algorithm.
- * Visit www.openauthentication.org for more information.
- *
- * @author Johan Rydell, PortWise, Inc.
- */
-
 public class TOTP {
 
-    private TOTP() {
+    private byte[] key;
+    private int returnDigits;
+    private Hash hash;
+    private int step;
+    private int tolerance;
+    private int drift;
+
+    /**
+     * Instantiate a new TOTP validator/generator
+     *
+     * @param key          the shared secret
+     * @param returnDigits number of digits to return
+     * @param step         the size of one timestep
+     * @param tolerance    the number of timesteps a sender can be out of sync
+     * @param drift        the known number of timesteps the sender is out of sync (can be negative)
+     * @return a numeric String in base 10 that includes truncationDigits digits
+     */
+    public TOTP(byte[] key, int returnDigits, int step, int tolerance, int drift) throws InvalidKeyException {
+        if (key.length == 20) this.hash = Hash.SHA1;
+        else if (key.length == 32) this.hash = Hash.SHA256;
+        else if (key.length == 64) this.hash = Hash.SHA512;
+        else throw new InvalidKeyException("Key length not supported, use a key of size of 20, 32 or 64 bytes");
+        this.key = key;
+        this.returnDigits = returnDigits;
+        this.step = step;
+        this.tolerance = tolerance;
+        this.drift = drift;
     }
 
     private static final int[] DIGITS_POWER
@@ -29,83 +36,24 @@ public class TOTP {
             = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
 
     /**
-     * This method generates a TOTP value for the given
-     * set of parameters.
+     * This method generates a TOTP value
      *
-     * @param key:          the shared secret, HEX encoded
-     * @param time:         a value that reflects a time
-     * @param returnDigits: number of digits to return
-     * @return a numeric String in base 10 that includes truncationDigits digits
-     */
-
-    public static String generateTOTP(String key,
-                                      String time,
-                                      String returnDigits) {
-        return generateTOTP(key, time, returnDigits, "HmacSHA1");
-    }
-
-    /**
-     * This method generates a TOTP value for the given
-     * set of parameters.
-     *
-     * @param key:          the shared secret, HEX encoded
-     * @param time:         a value that reflects a time
-     * @param returnDigits: number of digits to return
+     * @param time the current time in millis
      * @return a numeric String in base 10 that includes
-     * truncationDigits digits
+     *         truncationDigits digits
      */
+    public String generateTOTP(long time) {
 
-    public static String generateTOTP256(String key,
-                                         String time,
-                                         String returnDigits) {
-        return generateTOTP(key, time, returnDigits, "HmacSHA256");
-    }
+        long resultTime = time / (1000 * step);
 
-    /**
-     * This method generates a TOTP value for the given
-     * set of parameters.
-     *
-     * @param key:          the shared secret, HEX encoded
-     * @param time:         a value that reflects a time
-     * @param returnDigits: number of digits to return
-     * @return a numeric String in base 10 that includes
-     * truncationDigits digits
-     */
-
-    public static String generateTOTP512(String key,
-                                         String time,
-                                         String returnDigits) {
-        return generateTOTP(key, time, returnDigits, "HmacSHA512");
-    }
-
-    /**
-     * This method generates a TOTP value for the given
-     * set of parameters.
-     *
-     * @param key:          the shared secret, HEX encoded
-     * @param time:         a value that reflects a time
-     * @param returnDigits: number of digits to return
-     * @param crypto:       the crypto function to use
-     * @return a numeric String in base 10 that includes
-     * truncationDigits digits
-     */
-
-    public static String generateTOTP(String key,
-                                      String time,
-                                      String returnDigits,
-                                      String crypto) {
-        int codeDigits = Integer.decode(returnDigits);
-
-        // Using the counter
-        // First 8 bytes are for the movingFactor
-        // Compliant with base RFC 4226 (HOTP)
-        while (time.length() < 16)
-            time = "0" + time;
+        String hexTime = String.format("%H",resultTime);
+        while (hexTime.length() < 16) {
+            hexTime = "0" + hexTime;
+        }
 
         // Get the HEX in a Byte[]
-        byte[] msg = Util.hexStr2Bytes(time);
-        byte[] k = Util.hexStr2Bytes(key);
-        byte[] hash = Util.hmac_sha(crypto, k, msg);
+        byte[] msg = Util.hexStr2Bytes(hexTime);
+        byte[] hash = Util.hmac_sha("Hmac" + this.hash.toString(), this.key, msg);
 
         // put selected bytes into result int
         int offset = hash[hash.length - 1] & 0xf;
@@ -116,12 +64,27 @@ public class TOTP {
                         ((hash[offset + 2] & 0xff) << 8) |
                         (hash[offset + 3] & 0xff);
 
-        int otp = binary % DIGITS_POWER[codeDigits];
+        int otp = binary % DIGITS_POWER[returnDigits];
 
         String result = Integer.toString(otp);
-        while (result.length() < codeDigits) {
+        while (result.length() < returnDigits) {
             result = "0" + result;
         }
         return result;
+    }
+
+    /**
+     * Validates a received response. The method returns a number of timesteps the sender is out-of-synch. The return
+     * value can be stored by the service provider to update the drift factor for this client
+     *
+     * @param time the current time in millis
+     * @param response the number of timesteps the sender is out-of-sync (can be negative)
+     * @return
+     */
+    public int validate(long time, String response) throws InvalidResponseException {
+        long driftedTime = time + (drift * step * 1000);
+        for (int i = -tolerance; i <= tolerance; i++)
+            if (generateTOTP(time + (i * drift * step * 1000)).equals(response)) return i;
+        throw new InvalidResponseException("Response value out of reach");
     }
 }
