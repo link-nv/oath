@@ -59,17 +59,6 @@ public class Util {
         return strbuf.toString();
     }
 
-    public static byte[] zeroPad(byte[] src, byte[] dst) {
-        Arrays.fill(dst, (byte) 0x0);
-        int offset = 0;
-        int copyLength = dst.length;
-        if (src.length < dst.length) {
-            copyLength = src.length;
-        }
-        System.arraycopy(src, 0, dst, 0, copyLength);
-        return dst;
-    }
-
     public static String toKey(String key) {
         return (new BigInteger(key, 10))
                 .toString(16).toUpperCase();
