@@ -5,6 +5,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 
 public class Util {
 
@@ -44,6 +45,34 @@ public class Util {
         byte[] ret = new byte[bArray.length - 1];
         System.arraycopy(bArray, 1, ret, 0, ret.length);
         return ret;
+    }
+
+    public static String asHex(byte buf[]) {
+        StringBuilder strbuf = new StringBuilder(buf.length * 2);
+        int i;
+
+        for (i = 0; i < buf.length; i++) {
+            if (((int) buf[i] & 0xff) < 0x10)
+                strbuf.append("0");
+            strbuf.append(Long.toString((int) buf[i] & 0xff, 16));
+        }
+        return strbuf.toString();
+    }
+
+    public static byte[] zeroPad(byte[] src, byte[] dst) {
+        Arrays.fill(dst, (byte) 0x0);
+        int offset = 0;
+        int copyLength = dst.length;
+        if (src.length < dst.length) {
+            copyLength = src.length;
+        }
+        System.arraycopy(src, 0, dst, 0, copyLength);
+        return dst;
+    }
+
+    public static String toKey(String key) {
+        return (new BigInteger(key, 10))
+                .toString(16).toUpperCase();
     }
 
 }

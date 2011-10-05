@@ -1,25 +1,23 @@
 package net.link.oath;
 
-/**
- Copyright (c) 2011 IETF Trust and the persons identified as
- authors of the code. All rights reserved.
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
- Redistribution and use in source and binary forms, with or without
- modification, is permitted pursuant to, and subject to the license
- terms contained in, the Simplified BSD License set forth in Section
- 4.c of the IETF Trust's Legal Provisions Relating to IETF Documents
- (http://trustee.ietf.org/license-info).
- */
-
-/**
- * This an example implementation of OCRA.
- * Visit www.openauthentication.org for more information.
- *
- * @author Johan Rydell, PortWise
- */
 public class OCRA {
 
-    private OCRA() {
+    private OCRASuite ocraSuite;
+    private byte[] key;
+
+    /**
+     * Initializes OCRA generator/validator
+     *
+     * @param ocraSuite the ocraSuite that determines the policy
+     * @param key       the secret key
+     */
+    public OCRA(OCRASuite ocraSuite, byte[] key) {
+        this.ocraSuite = ocraSuite;
+        this.key = key;
     }
 
     private static final int[] DIGITS_POWER
@@ -28,81 +26,102 @@ public class OCRA {
 
 
     /**
-     * This method generates an OCRA HOTP value for the given
+     * This method generates an OCRA value for the given
      * set of parameters.
      *
-     * @param ocraSuite          the OCRA Suite
-     * @param key                the shared secret, HEX encoded
      * @param counter            the counter that changes on a per use
-     *                           basis, HEX encoded
-     * @param question           the challenge question, HEX encoded
-     * @param password           a password that can be used, HEX encoded
+     *                           basis
+     * @param question           the challenge question
+     * @param password           a password that can be used
      * @param sessionInformation Static information that identifies
-     *                           the current session, Hex encoded
-     * @param timeStamp          a value that reflects a time
+     *                           the current session
+     * @param timeStamp          a value that reflects a time in millis
      * @return A numeric String in base 10 that includes
      *         truncationDigits digits
+     * @throws InvalidSessionException is thrown when the session does not comply to the ocra suite spec
+     * @throws InvalidQuestionException is thrown when the question does not comply to the ocrasuite spec
+     * @throws InvalidHashException is thrown when the required password hashing algorithm is not found
      */
-    static public String generateOCRA(OCRASuite ocraSuite,
-                                      String key,
-                                      String counter,
-                                      String question,
-                                      String password,
-                                      String sessionInformation,
-                                      String timeStamp) {
-
-        int codeDigits;
-        int counterLength = 0;
-        int passwordLength = 0;
-        int sessionInformationLength = 0;
-        int timeStampLength = 0;
+    public String generate(
+            long counter,
+            String question,
+            String password,
+            String sessionInformation,
+            long timeStamp) throws InvalidHashException, InvalidQuestionException, InvalidSessionException {
 
         // How many digits should we return
-        codeDigits = ocraSuite.getCryptoFunction().getTruncation();
+        int codeDigits = this.ocraSuite.getCryptoFunction().getTruncation();
 
         // The size of the byte array message to be encrypted
         // Counter
+        String counterString = "";
+        int counterLength = 0;
         if (ocraSuite.getDataMode().isCounterMode()) {
-            // Fix the length of the HEX string
-            while (counter.length() < 16)
-                counter = "0" + counter;
+            counterString = String.format("%H", counter);
+            while (counterString.length() < 16) {
+                counterString = "0" + counterString;
+            }
             counterLength = 8;
         }
 
-        while (question.length() < 256)
-            question = question + "0";
+        // Question
+        // Question to byte conversion is very badly (as in "not") defined by the spec
+        // I guess the reference implementation is the spec here
+        String questionConverted = "";
+        if (ocraSuite.getDataMode().getqMode().getqType() == QMode.QType.A) {
+            questionConverted = Util.asHex(question.getBytes());
+        } else if (ocraSuite.getDataMode().getqMode().getqType() == QMode.QType.N) {
+            questionConverted = Util.toKey(question);
+        } else if (ocraSuite.getDataMode().getqMode().getqType() == QMode.QType.H) {
+            // even the reference implementation does not specify this
+            // so this is a best guess
+            questionConverted = question;
+        }
+        while (questionConverted.length() < 256) {
+            questionConverted = questionConverted + "0";
+        }
+        byte[] resultQuestion = Util.hexStr2Bytes(questionConverted);
+        if (resultQuestion.length > 128) throw new InvalidQuestionException("Question (challenge) too large");
         int questionLength = 128;
 
         // Password - sha1
         PMode pMode = ocraSuite.getDataMode().getpMode();
+        byte[] resultPassword = {};
         if (null != pMode) {
-            if (pMode.getHash() == Hash.SHA1) {
-                while (password.length() < 40)
-                    password = "0" + password;
-                passwordLength = 20;
-            } else if (pMode.getHash() == Hash.SHA256) {
-                while (password.length() < 64)
-                    password = "0" + password;
-                passwordLength = 32;
-            } else if (pMode.getHash() == Hash.SHA512) {
-                while (password.length() < 128)
-                    password = "0" + password;
-                passwordLength = 64;
+            try {
+                MessageDigest digest = MessageDigest.getInstance(pMode.getHash().toString());
+                resultPassword = digest.digest(password.getBytes());
+            } catch (NoSuchAlgorithmException e) {
+                throw new InvalidHashException("Could not initialize the password hashing algorithm", e);
             }
         }
 
         // sessionInformation
+        byte[] resultSession = {};
+        int sessionInformationLength = 0;
         if (ocraSuite.getDataMode().getsMode() != null) {
-            int sLength = ocraSuite.getDataMode().getsMode().getLength();
-            while (sessionInformation.length() < (sLength * 2))
-                sessionInformation = "0" + sessionInformation;
-            sessionInformationLength = sLength;
+            sessionInformationLength = ocraSuite.getDataMode().getsMode().getLength();
+            try {
+                resultSession = sessionInformation.getBytes("UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                // this can't happen
+                throw new RuntimeException("This can't happen", e);
+            }
+            if (resultSession.length != sessionInformationLength) {
+                throw new InvalidSessionException("The session should have a length of " +
+                        sessionInformationLength + " bytes when UTF-8 encoded");
+            }
         }
 
         // TimeStamp
-        if (ocraSuite.getDataMode().gettMode() != null) {
-            while (timeStamp.length() < 16)
-                timeStamp = "0" + timeStamp;
+        String timeStampString = "";
+        int timeStampLength = 0;
+        TMode tMode = ocraSuite.getDataMode().gettMode();
+        if (tMode != null) {
+            long step = tMode.getSize() * tMode.gettType().millis();
+            timeStampString = String.format("%H", timeStamp / step);
+            while (timeStampString.length() < 16)
+                timeStampString = "0" + timeStampString;
             timeStampLength = 8;
         }
 
@@ -111,8 +130,8 @@ public class OCRA {
         // Remember to add "1" for the "00" byte delimiter
         byte[] msg = new byte[ocraSuiteLength +
                 counterLength +
-                questionLength +
-                passwordLength +
+                resultQuestion.length +
+                resultPassword.length +
                 sessionInformationLength +
                 timeStampLength +
                 1];
@@ -127,41 +146,30 @@ public class OCRA {
         // Put the bytes of "Counter" to the message
         // Input is HEX encoded
         if (counterLength > 0) {
-            bArray = Util.hexStr2Bytes(counter);
+            bArray = Util.hexStr2Bytes(counterString);
             System.arraycopy(bArray, 0, msg, ocraSuiteLength + 1,
                     bArray.length);
         }
 
         // Put the bytes of "question" to the message
-        // Input is text encoded
-        if (questionLength > 0)
+        System.arraycopy(resultQuestion, 0, msg, ocraSuiteLength + 1 +
+                counterLength, resultQuestion.length);
 
-        {
-            bArray = Util.hexStr2Bytes(question);
-            System.arraycopy(bArray, 0, msg, ocraSuiteLength + 1 +
-                    counterLength, bArray.length);
-        }
 
         // Put the bytes of "password" to the message
-        // Input is HEX encoded
-        if (passwordLength > 0)
-
-        {
-            bArray = Util.hexStr2Bytes(password);
-            System.arraycopy(bArray, 0, msg, ocraSuiteLength + 1 +
-                    counterLength + questionLength, bArray.length);
+        if (resultPassword.length > 0) {
+            System.arraycopy(resultPassword, 0, msg, ocraSuiteLength + 1 +
+                    counterLength + questionLength, resultPassword.length);
 
         }
 
         // Put the bytes of "sessionInformation" to the message
-        // Input is text encoded
         if (sessionInformationLength > 0)
 
         {
-            bArray = Util.hexStr2Bytes(sessionInformation);
-            System.arraycopy(bArray, 0, msg, ocraSuiteLength + 1 +
+            System.arraycopy(resultSession, 0, msg, ocraSuiteLength + 1 +
                     counterLength + questionLength +
-                    passwordLength, bArray.length);
+                    resultPassword.length, resultSession.length);
         }
 
         // Put the bytes of "time" to the message
@@ -169,16 +177,14 @@ public class OCRA {
         if (timeStampLength > 0)
 
         {
-            bArray = Util.hexStr2Bytes(timeStamp);
+            bArray = Util.hexStr2Bytes(timeStampString);
             System.arraycopy(bArray, 0, msg, ocraSuiteLength + 1 +
                     counterLength + questionLength +
-                    passwordLength + sessionInformationLength,
+                    resultPassword.length + sessionInformationLength,
                     bArray.length);
         }
 
-        bArray = Util.hexStr2Bytes(key);
-
-        byte[] hash = Util.hmac_sha("Hmac" + ocraSuite.getCryptoFunction().getHash().toString(), bArray, msg);
+        byte[] hash = Util.hmac_sha("Hmac" + ocraSuite.getCryptoFunction().getHash().toString(), key, msg);
 
         // put selected bytes into result int
         int offset = hash[hash.length - 1] & 0xf;

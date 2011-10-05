@@ -36,16 +36,22 @@ public class TMode {
     }
 
     public enum TType {
-        S("S"), M("M"), H("H");
+        S("S",1000), M("M",60000), H("H",3600000);
 
         private String stringRep;
+        private long millis;
 
-        TType(String stringRep) {
+        TType(String stringRep, long millis) {
             this.stringRep = stringRep;
+            this.millis = millis;
         }
 
         public String toString() {
             return stringRep;
+        }
+
+        public long millis() {
+            return millis;
         }
     }
 

@@ -90,13 +90,13 @@ public class HOTP {
      * @param counter the counter value that was saved by the service provider
      * @param otp     the otp that was provided by the subject
      * @return the new counter value to be stored by the service provider
-     * @throws InvalidResponseException
+     * @throws InvalidResponseException when the response was out of reach
      */
     public int validate(int counter, String otp) throws InvalidResponseException {
-        int newCounter = counter;
         int i = 0;
-        while (i++ <= lookahead) {
+        while (i <= lookahead) {
             if (generateOTP(counter).equals(otp)) return counter + i;
+            i++;
         }
         throw new InvalidResponseException("Provided HOTP response is outside the lookahead range");
     }

@@ -17,7 +17,7 @@ public class TOTP {
      * @param step         the size of one timestep
      * @param tolerance    the number of timesteps a sender can be out of sync
      * @param drift        the known number of timesteps the sender is out of sync (can be negative)
-     * @return a numeric String in base 10 that includes truncationDigits digits
+     * @throws InvalidKeyException when the key length is not of size 20, 32 or 64 bytes
      */
     public TOTP(byte[] key, int returnDigits, int step, int tolerance, int drift) throws InvalidKeyException {
         if (key.length == 20) this.hash = Hash.SHA1;
@@ -42,11 +42,11 @@ public class TOTP {
      * @return a numeric String in base 10 that includes
      *         truncationDigits digits
      */
-    public String generateTOTP(long time) {
+    public String generate(long time) {
 
         long resultTime = time / (1000 * step);
 
-        String hexTime = String.format("%H",resultTime);
+        String hexTime = String.format("%H", resultTime);
         while (hexTime.length() < 16) {
             hexTime = "0" + hexTime;
         }
@@ -77,14 +77,15 @@ public class TOTP {
      * Validates a received response. The method returns a number of timesteps the sender is out-of-synch. The return
      * value can be stored by the service provider to update the drift factor for this client
      *
-     * @param time the current time in millis
-     * @param response the number of timesteps the sender is out-of-sync (can be negative)
-     * @return
+     * @param time     the current time in millis
+     * @param response the response that was sent by the client
+     * @return the number of timesteps the sender is out-of-sync (can be negative) this should be added to the
+     *         stored drift factor
+     * @throws InvalidResponseException when the response was not within reach
      */
     public int validate(long time, String response) throws InvalidResponseException {
-        long driftedTime = time + (drift * step * 1000);
         for (int i = -tolerance; i <= tolerance; i++)
-            if (generateTOTP(time + (i * drift * step * 1000)).equals(response)) return i;
+            if (generate(time + (i * drift * step * 1000)).equals(response)) return i;
         throw new InvalidResponseException("Response value out of reach");
     }
 }
