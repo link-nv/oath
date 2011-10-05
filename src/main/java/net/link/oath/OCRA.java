@@ -8,16 +8,25 @@ public class OCRA {
 
     private OCRASuite ocraSuite;
     private byte[] key;
+    private int counterLookahead;
+    private int timeTolerance;
+    private int timeDrift;
 
     /**
      * Initializes OCRA generator/validator
      *
-     * @param ocraSuite the ocraSuite that determines the policy
-     * @param key       the secret key
+     * @param ocraSuite        the ocraSuite that determines the policy
+     * @param key              the secret key
+     * @param counterLookahead the number of steps the client's counter may run ahead
+     * @param timeTolerance    the number of timesteps the client's clock can be out of sync
+     * @param timeDrift        the number of timesteps the client's clock is already out of sync
      */
-    public OCRA(OCRASuite ocraSuite, byte[] key) {
+    public OCRA(OCRASuite ocraSuite, byte[] key, int counterLookahead, int timeTolerance, int timeDrift) {
         this.ocraSuite = ocraSuite;
         this.key = key;
+        this.counterLookahead = counterLookahead;
+        this.timeTolerance = timeTolerance;
+        this.timeDrift = timeDrift;
     }
 
     private static final int[] DIGITS_POWER
@@ -38,9 +47,9 @@ public class OCRA {
      * @param timeStamp          a value that reflects a time in millis
      * @return A numeric String in base 10 that includes
      *         truncationDigits digits
-     * @throws InvalidSessionException is thrown when the session does not comply to the ocra suite spec
+     * @throws InvalidSessionException  is thrown when the session does not comply to the ocra suite spec
      * @throws InvalidQuestionException is thrown when the question does not comply to the ocrasuite spec
-     * @throws InvalidHashException is thrown when the required password hashing algorithm is not found
+     * @throws InvalidHashException     is thrown when the required password hashing algorithm is not found
      */
     public String generate(
             long counter,
@@ -205,5 +214,43 @@ public class OCRA {
         }
 
         return result;
+    }
+
+    /**
+     * This function validates a received response
+     *
+     * @param counter  the counter value of the client
+     * @param question the challenge
+     * @param password the password
+     * @param session  the session information
+     * @param time     the current time in millis
+     * @param response the response sent by the client
+     * @return an object which contains a new counter and a new timeDrift for the client.
+     *         These values should be stored if they are used in the policy.
+     * @throws InvalidResponseException when the response is out of reach of the lookahead and time tolerance ranges.
+     * @throws InvalidHashException     when the password hashing function is not found
+     * @throws InvalidQuestionException when the question does not comply to the OCRA suite policy
+     * @throws InvalidSessionException  when the session does not comply to the OCRA suite policy
+     */
+    public OCRAState validate(long counter, String question, String password,
+                              String session, long time, String response)
+            throws InvalidResponseException, InvalidHashException, InvalidQuestionException, InvalidSessionException {
+        int i = 0;
+        OCRAState result = new OCRAState();
+        long stepSize = 0;
+        TMode tMode = ocraSuite.getDataMode().gettMode();
+        if (tMode != null) stepSize = tMode.gettType().millis() * tMode.getSize();
+
+        while (i++ <= counterLookahead) {
+            for (int t = -timeTolerance; t <= timeTolerance; t++) {
+                long testTime = time + (t * timeDrift * stepSize);
+                if (generate(counter, question, password, session, testTime).equals(response)) {
+                    result.newCounter = counter + i;
+                    result.timeSkew = t;
+                    return result;
+                }
+            }
+        }
+        throw new InvalidResponseException("Provided OCRA response is outside the lookahead and time tolerance ranges");
     }
 }

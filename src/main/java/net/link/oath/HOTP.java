@@ -51,7 +51,7 @@ public class HOTP {
      *         codeDigits digits plus the optional checksum
      *         digit if requested.
      */
-    public String generateOTP(int counter) {
+    public String generate(int counter) {
         // put movingFactor value into text byte array
         int digits = this.addChecksum ? (this.codeDigits + 1) : this.codeDigits;
         byte[] text = new byte[8];
@@ -95,7 +95,7 @@ public class HOTP {
     public int validate(int counter, String otp) throws InvalidResponseException {
         int i = 0;
         while (i++ <= lookahead) {
-            if (generateOTP(counter).equals(otp)) return counter + i;
+            if (generate(counter).equals(otp)) return counter + i;
         }
         throw new InvalidResponseException("Provided HOTP response is outside the lookahead range");
     }
