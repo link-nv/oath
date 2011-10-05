@@ -94,9 +94,8 @@ public class HOTP {
      */
     public int validate(int counter, String otp) throws InvalidResponseException {
         int i = 0;
-        while (i <= lookahead) {
+        while (i++ <= lookahead) {
             if (generateOTP(counter).equals(otp)) return counter + i;
-            i++;
         }
         throw new InvalidResponseException("Provided HOTP response is outside the lookahead range");
     }
